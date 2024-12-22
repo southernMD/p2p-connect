@@ -3,7 +3,8 @@ import Peer from 'simple-peer';
 import { computed, Ref, ref, watch } from 'vue';
 import { io } from 'socket.io-client';
 //MESH架构
-const socket = io("https://southernmd-p2p-connect.glitch.me"); // WebSocket 服务器地址
+// const socket = io("https://southernmd-p2p-connect.glitch.me"); // WebSocket 服务器地址
+const socket = io("http://127.0.0.1:5001"); // WebSocket 服务器地址
 const myId = ref(''); // 本地用户的 Socket ID
 let peerMap:Map<string,Peer.Instance> = new Map() 
 const message = ref(''); // 要发送的消息
