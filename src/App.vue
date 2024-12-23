@@ -182,7 +182,7 @@ const createZipStream = (zip: JSZip, newFileArrayMsg: Ref<Msg>) => {
                   fileName: new Date().getTime() + '.' + content.type.split("/")[1],
                 }))
               })
-              triggerDownloadZip(content);
+              // triggerDownloadZip(content);
             } else {
               totalRead += value.length;
               chunks.push(value);
@@ -196,7 +196,7 @@ const createZipStream = (zip: JSZip, newFileArrayMsg: Ref<Msg>) => {
                 if (totalSentSize > maxChunkTotalSize) {
                   // 如果总发送字节数超过限制，暂停一段时间
                   console.log('Reached 256KB limit, waiting...');
-                  await sleep(50);  // 等待 10ms，具体等待时间可调整
+                  await sleep(100);  // 等待 10ms，具体等待时间可调整
                   totalSentSize = chunk.length;  // 重置 totalSentSize，当前 chunk 开始重新计数
                 }
 
@@ -306,7 +306,7 @@ const fileSteamToBlob = async (file: File, newFileArrayMsg: Ref<Msg>, flag: bool
                   if (totalSentSize > maxChunkTotalSize) {
                     // 如果总发送字节数超过限制，暂停一段时间
                     console.log('Reached 256KB limit, waiting...');
-                    await sleep(50);  // 等待 10ms，具体等待时间可调整
+                    await sleep(100);  // 等待 10ms，具体等待时间可调整
                     totalSentSize = chunk.length;  // 重置 totalSentSize，当前 chunk 开始重新计数
                   }
 

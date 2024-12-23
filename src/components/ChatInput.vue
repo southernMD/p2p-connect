@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
+import { computed, ref } from 'vue'
+import MobileDetect from 'mobile-detect';
 const $emit = defineEmits<{
   send: [content: string]
   openLink: [flag:Boolean]
@@ -18,13 +18,17 @@ const sendMessage = () => {
 const openLink = (flag:boolean)=>{
   $emit('openLink',flag)
 }
+//判断是否为移动端
+const isMobile = computed(() => {
+  return new MobileDetect(window.navigator.userAgent).mobile()
+});
 </script>
 
 <template>
   <div class="chat-input">
     <div class="toolbar" draggable="false">
       <button class="tool-btn" @click="openLink(true)">📄</button>
-      <button class="tool-btn" @click="openLink(false)">📁</button>
+      <button class="tool-btn" @click="openLink(false)" v-if="isMobile">📁</button>
     </div>
     <div class="input-area">
       <textarea
