@@ -1,19 +1,20 @@
 <script setup lang="ts">
 import { inject, Ref, ref } from 'vue'
 import OnlineList from './OnlineList.vue'
-import ChatMessages from './ChatMessages.vue'
+import ChatMessage from './ChatMessage.vue'
 import ChatInput from './ChatInput.vue'
-import type {Msg} from '../hooks/socket'
+import type { Msg } from '../hooks/socket'
+import { v4 as uuidv4 } from 'uuid'
 import type Peer from 'simple-peer'
-const userId = inject('userId')as Ref<string>
+const userId = inject('userId') as Ref<string>
 const onlienUser = inject('onlienUser') as Ref<string[]>
 const receivedMessage = inject('receivedMessage') as Ref<Msg[]>
 const peerMap = inject('peerMap') as Map<string, Peer.Instance>
-  const sendMessage = (msg: string) => {
-  receivedMessage.value.push({id:userId.value,data:msg,type:'text',timestamp:Date.now()})
-  for(const item of peerMap.keys()){
+const sendMessage = (msg: string) => {
+  receivedMessage.value.push({ id: userId.value, data: msg, type: 'text', timestamp: Date.now(), msgId: uuidv4() })
+  for (const item of peerMap.keys()) {
     console.log(item);
-    peerMap.get(item)!.send(msg)
+    peerMap.get(item)!.send(JSON.stringify({ id: userId.value, data: msg, type: 'text', timestamp: Date.now(), msgId: uuidv4() }))
   }
 }
 
@@ -43,23 +44,19 @@ const stopResize = () => {
   document.removeEventListener('mousemove', handleResize)
   document.removeEventListener('mouseup', stopResize)
 }
-
+const $emit = defineEmits(['openLink'])
+const openLink = (flag:Boolean)=>{
+  $emit('openLink',flag)
+}
 </script>
 
 <template>
-  <div class="chat-container">
+  <div class="chat-container" draggable="false">
     <div class="chat-main">
-      <ChatMessages :messages="receivedMessage" />
-      <div 
-        class="input-container"
-        :style="{ height: `${inputContainerHeight}px` }"
-      >
-        <div 
-          class="resize-handle"
-          @mousedown="startResize"
-          :class="{ 'resizing': isResizing }"
-        ></div>
-        <ChatInput @send="sendMessage" />
+      <ChatMessage :messages="receivedMessage" />
+      <div class="input-container" :style="{ height: `${inputContainerHeight}px` }">
+        <div class="resize-handle" @mousedown="startResize" :class="{ 'resizing': isResizing }"></div>
+        <ChatInput @send="sendMessage" @openLink="openLink" />
       </div>
     </div>
     <OnlineList :users="onlienUser" class="online-list" />

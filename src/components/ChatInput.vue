@@ -1,25 +1,30 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const emit = defineEmits<{
+const $emit = defineEmits<{
   send: [content: string]
+  openLink: [flag:Boolean]
 }>()
 
 const message = ref('')
 
 const sendMessage = () => {
   if (message.value.trim()) {
-    emit('send', message.value)
+    $emit('send', message.value)
     message.value = ''
   }
+}
+
+const openLink = (flag:boolean)=>{
+  $emit('openLink',flag)
 }
 </script>
 
 <template>
   <div class="chat-input">
     <div class="toolbar" draggable="false">
-      <button class="tool-btn">📎</button>
-      <!-- <button class="tool-btn">🖼️</button> -->
+      <button class="tool-btn" @click="openLink(true)">📄</button>
+      <button class="tool-btn" @click="openLink(false)">📁</button>
     </div>
     <div class="input-area">
       <textarea

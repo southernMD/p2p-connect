@@ -17,13 +17,13 @@ export default function (onlienUser:Ref<string[]>,myId:Ref<string>,receivedMessa
         userList?.forEach(item => {
             console.log(peerMap);
             if (id != item) {
-                peerMap.set(item, new Peer({ initiator: true, trickle: false }))
+                peerMap.set(item, new Peer({ initiator: true, trickle: false ,}))
                 peerMap.get(item)!.on('signal', (signal) => {
                     socket.emit('one-user-join-room', { newSocketId: id, signal, oldSocketId: item });
                 })
                 peerMap.get(item)!.on('data', (data) => {
-                    console.log(data);
-                    receivedMessage.value.push({ id: item, data: data.toString(),type:'text' ,timestamp:new Date().getTime()})
+                    // console.log(data.toString());
+                    getData(data.toString(),receivedMessage)
                 })
                 peerMap.get(item)!.on("connect", () => {
                     console.log("new connect");
@@ -44,8 +44,9 @@ export default function (onlienUser:Ref<string[]>,myId:Ref<string>,receivedMessa
             onlienUser.value.push(newSocketId)
         })
         peer.on('data', (data) => {
-            console.log(data);
-            receivedMessage.value.push({ id: newSocketId, data: data.toString(),type:'text' ,timestamp:new Date().getTime()})
+            // console.log(data.toString());
+            getData(data.toString(),receivedMessage)
+            // receivedMessage.value.push({ id: newSocketId, data: data.toString(),type:'text' ,timestamp:new Date().getTime()})
         })
         peer.signal(signal)
         peerMap.set(newSocketId, peer)
@@ -64,3 +65,52 @@ export default function (onlienUser:Ref<string[]>,myId:Ref<string>,receivedMessa
     })
 
 }
+const fileMap = new Map<string, any>()
+const getData = (str: string,receivedMessage: Ref<Msg[]>)=>{
+    try{
+        const json = JSON.parse(str) as Msg
+        if(json.type.startsWith("file")){
+            if(json.type.startsWith("file-start")){
+                const msg = {
+                    type:json.type,
+                    id:json.id,
+                    loadMsg:json.loadMsg,
+                    msgId:json.msgId,
+                    timestamp:json.timestamp,
+                    progress:"0",
+                    fileSize:json.fileSize
+                }
+                // const { stream, controller } = createFileStream(json.msgId);
+                fileMap.set(json.msgId, []);
+                receivedMessage.value.push(msg)
+            }else if(json.type.startsWith("file-progress")){
+                //@ts-ignore fileBlob此时是ArrayBuffer的切片数据
+                fileMap.get(json.msgId)!.push(new Uint8Array(json.fileBlob as Array<any>))
+                const msg = receivedMessage.value.find(item=>item.msgId == json.msgId)!
+                msg.progress = json.progress
+                msg.loadMsg = '正在下载文件'
+                msg.type = json.type
+            }else if(json.type.startsWith("file-end")){
+                const fileBlob = new Blob(fileMap.get(json.msgId)!)
+                const msg = receivedMessage.value.find(item=>item.msgId == json.msgId)!
+                msg.loadMsg = '文件下载完成'
+                msg.fileBlob = fileBlob
+                msg.fileName = json.fileName
+                msg.type = json.type
+                // const a = document.createElement('a');
+                // const url = URL.createObjectURL(fileBlob);
+                // a.href = url;
+                // a.download = msg.fileName!;
+                // a.click();
+                // URL.revokeObjectURL(url);
+            }
+        }else if(json.type == "text"){
+            receivedMessage.value.push(json)
+        }
+    }catch(e){
+        console.log(e);
+    }
+
+
+}
+

@@ -10,7 +10,7 @@ const userId = inject('userId')
 
 <template>
   <header class="chat-header">
-    <h1>聊天室 你的ID：<span style="color: var(--oneself-color);"> {{ userId }}</span></h1>
+    <h1>数据传输助手 你的ID：<span style="color: var(--oneself-color);"> {{ userId }}</span></h1>
     <div class="header-controls">
       <ElSwitch
         v-model="isDark"
