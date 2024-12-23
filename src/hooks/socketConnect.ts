@@ -4,7 +4,7 @@ import { Ref } from "vue";
 import { Msg } from "./socket";
 
 export default function (onlienUser:Ref<string[]>,myId:Ref<string>,receivedMessage:Ref<Msg[]>,peerMap:Map<string, Peer.Instance>): void {
-    const socket = io("http://127.0.0.1:5001"); // WebSocket 服务器地址
+    const socket = io("https://southernmd-p2p-connect.glitch.me"); // WebSocket 服务器地址
     // const myId = ref(''); // 本地用户的 Socket ID
     // let peerMap: Map<string, Peer.Instance> = new Map()
     // const onlienUser = ref([]) as Ref<string[]>

@@ -1,5 +1,9 @@
-# Vue 3 + TypeScript + Vite
+# 一个局域网数据传输工具
+参考与灵感：https://github.com/sunzsh/internal-chat
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+访问地址：https://www.southernmd.us.kg
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 提示
+1. 大文件传输可能会失败，暂时没有做错误处理。
+2. 如果你在局域网内但是列表内没有对应设备，请先查看是否开启代理。
+3. 未考虑浏览器兼容性。如果你遇到了无法使用的情况，请提供你的浏览器信息，会视情况做适配。
