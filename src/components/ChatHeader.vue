@@ -42,6 +42,8 @@ watch(sleepValue,()=>{
       </div>
     </ElDialog>
   </header>
+  <div class="chat-id"><h1>数据传输助手 你的ID：<span style="color: var(--oneself-color);"> {{ userId }}</span></h1></div>
+
 </template>
 
 <style scoped>
@@ -52,6 +54,31 @@ watch(sleepValue,()=>{
   align-items: center;
   border-bottom: 1px solid var(--border-color);
   background: var(--header-bg);
+  width: 100vw;
+  word-break: break-all;
+}
+.chat-id{
+  width: 100vw;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-color);
+  margin-top: 1em;
+  padding: 1rem 1.5rem;
+  display: none;
+  h1{
+    font-size: 1.25rem;
+    margin: 0;
+    color: var(--text-color);
+    word-break: break-all;
+  }
+}
+@media (max-width: 768px) {
+  .chat-id{
+    display: block;
+  }
+  .chat-header >h1{
+    display: none;
+  }
 }
 
 .chat-header h1 {
