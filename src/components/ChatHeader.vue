@@ -1,20 +1,26 @@
 <script setup lang="ts">
 
 import { useDark, useToggle } from '@vueuse/core'
-import { ElButton } from 'element-plus';
-import { inject, ref } from 'vue';
+import { ElButton,ElInput } from 'element-plus';
+import { inject, ref, watch } from 'vue';
         // :active-icon="'🌙'"
         // :inactive-icon="'☀️'"
 const isDark = useDark()
 const toggleDark = useToggle(isDark)
 const userId = inject('userId')
 const aboutDialogVisible = ref(false)
+const sleepValue = ref(localStorage.getItem('sleepValue') ?? 500)
+watch(sleepValue,()=>{
+  localStorage.setItem('sleepValue',sleepValue.value+"")
+})
 </script>
 
 <template>
   <header class="chat-header">
     <h1>数据传输助手 你的ID：<span style="color: var(--oneself-color);"> {{ userId }}</span></h1>
     <div class="header-controls">
+      <div class="sleep">sleep时间</div>
+      <ElInput class="sleep-input" v-model="sleepValue" placeholder="设置sleep的时间(ms)，不建议低于100"></ElInput>
       <ElButton class="about-btn" @click="aboutDialogVisible = true" type="primary">关于</ElButton>
       <ElSwitch
         v-model="isDark"
@@ -31,6 +37,7 @@ const aboutDialogVisible = ref(false)
       <div class="about-content">
         <h3>数据传输助手 v1.0.0</h3>
         <p>一个简单的采用simple-peer(webrtc)与webSocket(socket.io)实现的局域网文件传输</p>
+        <p>大文件上传可能会导致p2p传输失败，因为我没有想到好的办法去监视p2p传播的流量，因此暂时使用设置sleep的方式解决</p>
         <p><a href="https://github.com/southernMD/p2p-connect" target="_blank">github</a></p>
       </div>
     </ElDialog>
@@ -68,11 +75,22 @@ const aboutDialogVisible = ref(false)
 }
 
 .about-btn{
-  margin-right: 2em;
+  margin-right: 1em;
 }
 .header-controls{
   display: flex;
+  .sleep{
+    width: 120px;
+    font-size: 12px;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+  }
+  .sleep-input{
+    margin-right: 1em;
+  }
 }
+
 .about-content{
   a{
     color: black;

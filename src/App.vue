@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 const userId = ref('Alice')
 const onlienUser = ref([])
 const receivedMessage = ref([]) as Ref<Msg[]>
+
 let peerMap: Map<string, any> = new Map()
 useSocketConnect(onlienUser, userId, receivedMessage, peerMap)
 provide('userId', userId)
@@ -189,14 +190,14 @@ const createZipStream = (zip: JSZip, newFileArrayMsg: Ref<Msg>) => {
               controller.enqueue(value);
               const progress = (totalRead / totalSize) * 100;
               let offset = 0;
-
+              const sleepTime = localStorage.getItem("sleepValue")?+localStorage.getItem("sleepValue")!:500
               while (offset < value.length) {
                 const chunk = value.slice(offset, offset + chunkSize);
                 totalSentSize += chunk.length;  // 累加当前 chunk 的大小
                 if (totalSentSize > maxChunkTotalSize) {
                   // 如果总发送字节数超过限制，暂停一段时间
                   console.log('Reached 256KB limit, waiting...');
-                  await sleep(100);  // 等待 10ms，具体等待时间可调整
+                  await sleep(sleepTime);  // 等待 10ms，具体等待时间可调整
                   totalSentSize = chunk.length;  // 重置 totalSentSize，当前 chunk 开始重新计数
                 }
 
@@ -296,6 +297,7 @@ const fileSteamToBlob = async (file: File, newFileArrayMsg: Ref<Msg>, flag: bool
               chunks.push(value);
               controller.enqueue(value);
               const progress = (totalRead / totalSize) * 100;
+              const sleepTime = localStorage.getItem("sleepValue")?+localStorage.getItem("sleepValue")!:500
               if (flag) {
                 let offset = 0;
 
@@ -306,7 +308,7 @@ const fileSteamToBlob = async (file: File, newFileArrayMsg: Ref<Msg>, flag: bool
                   if (totalSentSize > maxChunkTotalSize) {
                     // 如果总发送字节数超过限制，暂停一段时间
                     console.log('Reached 256KB limit, waiting...');
-                    await sleep(100);  // 等待 10ms，具体等待时间可调整
+                    await sleep(sleepTime);  // 等待 10ms，具体等待时间可调整
                     totalSentSize = chunk.length;  // 重置 totalSentSize，当前 chunk 开始重新计数
                   }
 

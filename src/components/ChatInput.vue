@@ -28,7 +28,7 @@ const isMobile = computed(() => {
   <div class="chat-input">
     <div class="toolbar" draggable="false">
       <button class="tool-btn" @click="openLink(true)">📄</button>
-      <button class="tool-btn" @click="openLink(false)" v-if="isMobile">📁</button>
+      <button class="tool-btn" @click="openLink(false)" v-if="!isMobile">📁</button>
     </div>
     <div class="input-area">
       <textarea
