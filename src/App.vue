@@ -6,11 +6,13 @@ import useSocketConnect from '@/hooks/socketConnect'
 import JSZip from 'jszip';
 import { Msg } from './hooks/socket';
 import { v4 as uuidv4 } from 'uuid';
+import type { Instance } from 'simple-peer';
+
 const userId = ref('Alice')
 const onlienUser = ref([])
 const receivedMessage = ref([]) as Ref<Msg[]>
 
-let peerMap: Map<string, any> = new Map()
+let peerMap: Map<string, Instance> = new Map()
 useSocketConnect(onlienUser, userId, receivedMessage, peerMap)
 provide('userId', userId)
 provide('onlienUser', onlienUser)
@@ -30,6 +32,7 @@ const handleDragOver = (e: DragEvent) => {
 const handleDragLeave = () => {
   isDragging.value = false
 }
+
 const handleDrop = async (e: DragEvent) => {
   e.preventDefault();
   isDragging.value = false
@@ -168,7 +171,6 @@ const createZipStream = (zip: JSZip, newFileArrayMsg: Ref<Msg>) => {
         const chunks: any[] = [];
         const chunkSize = 16 * 1024;
         const maxChunkTotalSize = 256 * 1024;
-        let totalSentSize = 0;  // 当前已发送的总字节数
         function push() {
           reader.read().then(async ({ done, value }) => {
             if (done) {
@@ -190,19 +192,19 @@ const createZipStream = (zip: JSZip, newFileArrayMsg: Ref<Msg>) => {
               controller.enqueue(value);
               const progress = (totalRead / totalSize) * 100;
               let offset = 0;
-              const sleepTime = localStorage.getItem("sleepValue")?+localStorage.getItem("sleepValue")!:500
               while (offset < value.length) {
                 const chunk = value.slice(offset, offset + chunkSize);
-                totalSentSize += chunk.length;  // 累加当前 chunk 的大小
-                if (totalSentSize > maxChunkTotalSize) {
-                  // 如果总发送字节数超过限制，暂停一段时间
-                  console.log('Reached 256KB limit, waiting...');
-                  await sleep(sleepTime);  // 等待 10ms，具体等待时间可调整
-                  totalSentSize = chunk.length;  // 重置 totalSentSize，当前 chunk 开始重新计数
-                }
-
                 // 发送数据到所有 peer
-                peerMap.forEach((peer) => {
+                const peers = peerMap.values()
+                for (let peer of peers) {
+                  //@ts-ignore _channel是存在的
+                  const RTCDataChannel: RTCDataChannel = peer._channel;
+
+                  // 检查 bufferedAmount，防止溢出
+                  while (RTCDataChannel.bufferedAmount > maxChunkTotalSize) { // 256KB 阈值
+                    console.log(`Buffered amount (${RTCDataChannel.bufferedAmount}) exceeds limit, waiting...`);
+                    await sleep(10); // 等待缓冲区释放
+                  }
                   peer.send(JSON.stringify({
                     type: 'file-progress',
                     id: userId.value,
@@ -211,9 +213,8 @@ const createZipStream = (zip: JSZip, newFileArrayMsg: Ref<Msg>) => {
                     msgId: newFileArrayMsg.value.msgId,
                     fileBlob: Array.from(chunk)
                   }));
-                });
+                }
                 offset += chunkSize;  // 更新偏移量，继续传输下一块
-                // await sleep(1)
               }
               push();
               // 更新进度条
@@ -233,23 +234,7 @@ const createZipStream = (zip: JSZip, newFileArrayMsg: Ref<Msg>) => {
   });
 };
 
-const triggerDownloadZip = (content: Blob) => {
-  const a = document.createElement('a');
-  const url = URL.createObjectURL(content);
-  a.href = url;
-  a.download = 'uploaded_files.zip';
-  a.click();
-  URL.revokeObjectURL(url);
-};
 
-const triggerDownload = async (content: Blob, name: string) => {
-  const a = document.createElement('a');
-  const url = URL.createObjectURL(content);
-  a.href = url;
-  a.download = new Date().getTime() + '.' + name;
-  a.click();
-  URL.revokeObjectURL(url);
-};
 const fileSteamToBlob = async (file: File, newFileArrayMsg: Ref<Msg>, flag: boolean, imgFlag = false) => {
   if (flag) {
     peerMap.forEach((peer) => {
@@ -272,7 +257,6 @@ const fileSteamToBlob = async (file: File, newFileArrayMsg: Ref<Msg>, flag: bool
         const chunks: any[] = [];
         const chunkSize = 16 * 1024;
         const maxChunkTotalSize = 1024 * 256;
-        let totalSentSize = 0;  // 当前已发送的总字节数
         function push() {
           reader.read().then(async ({ done, value }) => {
             if (done) {
@@ -297,33 +281,30 @@ const fileSteamToBlob = async (file: File, newFileArrayMsg: Ref<Msg>, flag: bool
               chunks.push(value);
               controller.enqueue(value);
               const progress = (totalRead / totalSize) * 100;
-              const sleepTime = localStorage.getItem("sleepValue")?+localStorage.getItem("sleepValue")!:500
               if (flag) {
                 let offset = 0;
-
                 while (offset < value.length) {
                   const chunk = value.slice(offset, offset + chunkSize);
-                  totalSentSize += chunk.length;  // 累加当前 chunk 的大小
-
-                  if (totalSentSize > maxChunkTotalSize) {
-                    // 如果总发送字节数超过限制，暂停一段时间
-                    console.log('Reached 256KB limit, waiting...');
-                    await sleep(sleepTime);  // 等待 10ms，具体等待时间可调整
-                    totalSentSize = chunk.length;  // 重置 totalSentSize，当前 chunk 开始重新计数
-                  }
-
                   // 发送数据到所有 peer
-                  peerMap.forEach((peer) => {
+                  const peers = peerMap.values()
+                  for (let peer of peers) {
+                    //@ts-ignore _channel是存在的
+                    const RTCDataChannel: RTCDataChannel = peer._channel;
+
+                    // 检查 bufferedAmount，防止溢出
+                    while (RTCDataChannel.bufferedAmount > maxChunkTotalSize) { // 256KB 阈值
+                      console.log(`Buffered amount (${RTCDataChannel.bufferedAmount}) exceeds limit, waiting...`);
+                      await sleep(10); // 等待缓冲区释放
+                    }
                     peer.send(JSON.stringify({
-                      type: 'file-progress' + (imgFlag ? '-image' : ''),
+                      type: 'file-progress',
                       id: userId.value,
                       progress: progress.toFixed(2),
                       loadMsg: newFileArrayMsg.value.loadMsg,
                       msgId: newFileArrayMsg.value.msgId,
                       fileBlob: Array.from(chunk)
                     }));
-                  });
-
+                  }
                   offset += chunkSize;  // 更新偏移量，继续传输下一块
                 }
               }
@@ -351,7 +332,7 @@ const openLink = (flag: Boolean) => {
     input.onchange = async (e) => {
       e.preventDefault()
       const files = input.files;
-      if(files){
+      if (files) {
         const newFileArrayMsg = ref({
           id: userId.value,
           type: 'file',
@@ -363,7 +344,7 @@ const openLink = (flag: Boolean) => {
           fileName: new Date().getTime() + '.zip',
         })
         receivedMessage.value.push(newFileArrayMsg.value)
-        if(files.length == 1){
+        if (files.length == 1) {
           const file = files[0]
           newFileArrayMsg.value.loadMsg = file.name
           newFileArrayMsg.value.fileName = file.name
@@ -371,9 +352,9 @@ const openLink = (flag: Boolean) => {
           const imgFlag = file.type.includes('image') ? true : false
           if (imgFlag) newFileArrayMsg.value.type += '-image'
           await fileSteamToBlob(file, newFileArrayMsg, true, imgFlag)
-        }else{
+        } else {
           const zip = new JSZip()
-          for(const file of files){
+          for (const file of files) {
             newFileArrayMsg.value.loadMsg = "正在处理文件" + file.name
             newFileArrayMsg.value.fileSize! += file.size
             const fileBlob = await fileSteamToBlob(file, newFileArrayMsg, false)
@@ -386,16 +367,16 @@ const openLink = (flag: Boolean) => {
         input.remove()
       }
     }
-  }else{
+  } else {
     const input = document.createElement('input');
     input.type = 'file';
-    input.multiple = true; 
-    input.webkitdirectory = true; 
+    input.multiple = true;
+    input.webkitdirectory = true;
     input.click()
-    input.onchange = async (e:Event)=>{
+    input.onchange = async (e: Event) => {
       const files = input.files
-      
-      if(files){
+
+      if (files) {
         const newFileArrayMsg = ref({
           id: userId.value,
           type: 'file',
@@ -409,7 +390,7 @@ const openLink = (flag: Boolean) => {
         receivedMessage.value.push(newFileArrayMsg.value)
         console.log(files);
         const zip = new JSZip()
-        for(const file of files){
+        for (const file of files) {
           const fileBlob = await fileSteamToBlob(file, newFileArrayMsg, false)
           newFileArrayMsg.value.fileSize! += file.size
           zip.file(file.webkitRelativePath, fileBlob)

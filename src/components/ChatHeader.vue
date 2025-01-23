@@ -9,18 +9,13 @@ const isDark = useDark()
 const toggleDark = useToggle(isDark)
 const userId = inject('userId')
 const aboutDialogVisible = ref(false)
-const sleepValue = ref(localStorage.getItem('sleepValue') ?? 500)
-watch(sleepValue,()=>{
-  localStorage.setItem('sleepValue',sleepValue.value+"")
-})
+
 </script>
 
 <template>
   <header class="chat-header">
     <h1>数据传输助手 你的ID：<span style="color: var(--oneself-color);"> {{ userId }}</span></h1>
     <div class="header-controls">
-      <div class="sleep">sleep时间</div>
-      <ElInput class="sleep-input" v-model="sleepValue" placeholder="设置sleep的时间(ms)，不建议低于100"></ElInput>
       <ElButton class="about-btn" @click="aboutDialogVisible = true" type="primary">关于</ElButton>
       <ElSwitch
         v-model="isDark"
@@ -31,13 +26,15 @@ watch(sleepValue,()=>{
     <ElDialog
       v-model="aboutDialogVisible"
       title="关于"
-      width="300px"
+      width="50%"
       align-center
     >
       <div class="about-content">
         <h3>数据传输助手 v1.0.0</h3>
         <p>一个简单的采用simple-peer(webrtc)与webSocket(socket.io)实现的局域网文件传输</p>
         <p>大文件上传可能会导致p2p传输失败，因为我没有想到好的办法去监视p2p传播的流量，因此暂时使用设置sleep的方式解决</p>
+        <h3>2025/1/23 更新</h3>
+        <p>sleep输入框已经删除，已经限制最大传输量为webrtc默认限制256KB</p>
         <p><a href="https://github.com/southernMD/p2p-connect" target="_blank">github</a></p>
       </div>
     </ElDialog>
