@@ -1,20 +1,28 @@
 <script setup lang="ts">
-import { inject, onMounted, ref } from 'vue'
+import { ElScrollbar } from 'element-plus'
+import { inject, nextTick, onMounted, Ref, ref, watch } from 'vue'
 import FileMessage from './FileMessage.vue'
 import { Msg } from '../hooks/socket';
 const userId = inject('userId')
-defineProps<{
+const props = defineProps<{
   messages: Msg[]
 }>()
 
-const scrollbarRef = ref()
+const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
+const messagesRef = ref() as Ref<HTMLElement>
+
 
 const scrollToBottom = () => {
   if (scrollbarRef.value) {
-    const scrollbar = scrollbarRef.value.$el
-    scrollbar.scrollTop = scrollbar.scrollHeight
+    scrollbarRef.value.setScrollTop(messagesRef.value.clientHeight)
   }
 }
+
+watch(()=>props.messages,()=>{
+  nextTick(()=>{
+    scrollToBottom()
+  })
+},{deep:true})
 
 onMounted(() => {
   scrollToBottom()
@@ -23,7 +31,7 @@ onMounted(() => {
 
 <template>
   <ElScrollbar ref="scrollbarRef" class="messages-scrollbar">
-    <div class="messages">
+    <div class="messages" ref="messagesRef">
       <div v-for="message in messages" :key="message.id" class="message">
         <div class="message-header">
           <span class="user" :class="{ 'user-my': message.id == userId }">{{ message.id }}</span>
