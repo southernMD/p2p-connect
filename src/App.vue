@@ -122,7 +122,6 @@ const zipUploadFiles = async (items: DataTransferItemList, newFileArrayMsg: Ref<
       newFileArrayMsg.value.loadMsg = "正在处理文件" + file.name
       newFileArrayMsg.value.fileSize! += file.size
       const fileBlob = await fileSteamToBlob(file, newFileArrayMsg, false)
-      console.log(file);
       // 读取文件内容并添加到 ZIP 文件中
       zip.file(file.name, fileBlob);
     }
@@ -138,7 +137,6 @@ const uploadFile = async (item: DataTransferItemList, newFileArrayMsg: Ref<Msg>)
   newFileArrayMsg.value.loadMsg = file.name
   newFileArrayMsg.value.fileName = file.name
   newFileArrayMsg.value.fileSize = file.size
-  console.log(file.type);
   const imgFlag = file.type.includes('image') ? true : false
   if (imgFlag) newFileArrayMsg.value.type += '-image'
   await fileSteamToBlob(file, newFileArrayMsg, true, imgFlag)
@@ -202,7 +200,7 @@ const createZipStream = (zip: JSZip, newFileArrayMsg: Ref<Msg>) => {
 
                   // 检查 bufferedAmount，防止溢出
                   while (RTCDataChannel.bufferedAmount > maxChunkTotalSize) { // 256KB 阈值
-                    console.log(`Buffered amount (${RTCDataChannel.bufferedAmount}) exceeds limit, waiting...`);
+                    // console.log(`Buffered amount (${RTCDataChannel.bufferedAmount}) exceeds limit, waiting...`);
                     await sleep(10); // 等待缓冲区释放
                   }
                   peer.send(JSON.stringify({
@@ -220,7 +218,7 @@ const createZipStream = (zip: JSZip, newFileArrayMsg: Ref<Msg>) => {
               // 更新进度条
               newFileArrayMsg.value.loadMsg = "正在上传文件"
               newFileArrayMsg.value.progress = progress.toFixed(2)
-              console.log(`Progress: ${progress.toFixed(2)}%`);
+              // console.log(`Progress: ${progress.toFixed(2)}%`);
             }
           });
         }
@@ -265,11 +263,15 @@ const fileSteamToBlob = async (file: File, newFileArrayMsg: Ref<Msg>, flag: bool
               // console.log(blob);
               resolve(blob);
               if (flag) {
+                let newFileName = new Date().getTime() + '.' + file.type.split("/")[1]
+                if(file.type.split("/")[1] === 'vnd.android.package-archive'){
+                  newFileName = new Date().getTime() + '.apk'
+                }
                 peerMap.forEach((peer) => {
                   peer.send(JSON.stringify({
                     type: 'file-end' + (imgFlag ? '-image' : ''),
                     msgId: newFileArrayMsg.value.msgId,
-                    fileName: new Date().getTime() + '.' + file.type.split("/")[1],
+                    fileName: newFileName
                   }))
                 })
                 if (imgFlag) newFileArrayMsg.value.fileBlob = blob
@@ -293,7 +295,7 @@ const fileSteamToBlob = async (file: File, newFileArrayMsg: Ref<Msg>, flag: bool
 
                     // 检查 bufferedAmount，防止溢出
                     while (RTCDataChannel.bufferedAmount > maxChunkTotalSize) { // 256KB 阈值
-                      console.log(`Buffered amount (${RTCDataChannel.bufferedAmount}) exceeds limit, waiting...`);
+                      // console.log(`Buffered amount (${RTCDataChannel.bufferedAmount}) exceeds limit, waiting...`);
                       await sleep(10); // 等待缓冲区释放
                     }
                     peer.send(JSON.stringify({
@@ -322,7 +324,6 @@ const fileSteamToBlob = async (file: File, newFileArrayMsg: Ref<Msg>, flag: bool
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay))
 
 const openLink = (flag: Boolean) => {
-  console.log(flag);
   //flag true 文件 flase文件夹
   if (flag) {
     const input = document.createElement('input');
@@ -388,7 +389,6 @@ const openLink = (flag: Boolean) => {
           fileName: new Date().getTime() + '.zip',
         })
         receivedMessage.value.push(newFileArrayMsg.value)
-        console.log(files);
         const zip = new JSZip()
         for (const file of files) {
           const fileBlob = await fileSteamToBlob(file, newFileArrayMsg, false)

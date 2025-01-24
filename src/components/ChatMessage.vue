@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElScrollbar } from 'element-plus'
+import { ElMessage, ElScrollbar } from 'element-plus'
 import { inject, nextTick, onMounted, Ref, ref, watch } from 'vue'
 import FileMessage from './FileMessage.vue'
 import { Msg } from '../hooks/socket';
@@ -18,15 +18,24 @@ const scrollToBottom = () => {
   }
 }
 
-watch(()=>props.messages,()=>{
-  nextTick(()=>{
+watch(() => props.messages.length, () => {
+  nextTick(() => {
     scrollToBottom()
   })
-},{deep:true})
+}, { deep: true })
 
 onMounted(() => {
   scrollToBottom()
 })
+
+const copyText = async (msg:string)=>{
+  try {
+    await navigator.clipboard.writeText(msg)
+    ElMessage.success('复制成功')
+  } catch (error) {
+    ElMessage.error('复制失败')
+  }
+}
 </script>
 
 <template>
@@ -42,7 +51,13 @@ onMounted(() => {
             <FileMessage :message="message" />
           </template>
           <template v-else>
-            {{ message.data }}
+            <pre>{{ message.data! }}</pre>
+            <svg viewBox="0 0 24 24" width="20" height="20" @click="copyText(message.data!)">
+              <path
+                d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+                fill="currentColor">
+              </path>
+            </svg>
           </template>
         </div>
       </div>
@@ -51,6 +66,11 @@ onMounted(() => {
 </template>
 
 <style scoped>
+pre {
+  font-family: inherit;
+  margin: 0;
+}
+
 .messages-scrollbar {
   flex: 1;
   height: 100%;
@@ -59,6 +79,7 @@ onMounted(() => {
 .messages {
   padding: 1rem;
 }
+
 @media (max-width: 768px) {
   .messages {
     height: 300px;
@@ -95,8 +116,22 @@ onMounted(() => {
   padding: 0.5rem 1rem;
   border-radius: 4px;
   color: var(--text-color);
+  position: relative;
 }
-
+.content svg{
+  padding: 4px;
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+  right: 1em;
+  cursor: pointer;
+}
+.content svg:hover{
+  background-color: var(--copy-hover-bg);
+}
 html.dark .time {
   color: #999;
 }

@@ -13,7 +13,6 @@ const peerMap = inject('peerMap') as Map<string, Peer.Instance>
 const sendMessage = (msg: string) => {
   receivedMessage.value.push({ id: userId.value, data: msg, type: 'text', timestamp: Date.now(), msgId: uuidv4() })
   for (const item of peerMap.keys()) {
-    console.log(item);
     peerMap.get(item)!.send(JSON.stringify({ id: userId.value, data: msg, type: 'text', timestamp: Date.now(), msgId: uuidv4() }))
   }
 }

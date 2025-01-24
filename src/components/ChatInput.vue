@@ -22,6 +22,16 @@ const openLink = (flag:boolean)=>{
 const isMobile = computed(() => {
   return new MobileDetect(window.navigator.userAgent).mobile()
 });
+
+const handleEnter = (event: KeyboardEvent) => {
+  if (!event.shiftKey) {
+    event.preventDefault()
+    sendMessage()
+  }
+}
+const placeholderMsg = computed(()=>{
+  return !isMobile?"输入消息...":"输入消息...按住shift可以换行"
+})
 </script>
 
 <template>
@@ -33,8 +43,8 @@ const isMobile = computed(() => {
     <div class="input-area">
       <textarea
         v-model="message"
-        @keydown.enter.prevent="sendMessage"
-        placeholder="输入消息..."
+        @keydown.enter="handleEnter"
+        :placeholder="placeholderMsg"
       ></textarea>
       <button @click="sendMessage" class="send-btn">发送</button>
     </div>
