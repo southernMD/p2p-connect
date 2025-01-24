@@ -24,14 +24,13 @@ const isMobile = computed(() => {
 });
 
 const handleEnter = (event: KeyboardEvent) => {
+  if(isMobile.value) return;
   if (!event.shiftKey) {
     event.preventDefault()
     sendMessage()
   }
 }
-const placeholderMsg = computed(()=>{
-  return !isMobile?"输入消息...":"输入消息...按住shift可以换行"
-})
+
 </script>
 
 <template>
@@ -44,7 +43,7 @@ const placeholderMsg = computed(()=>{
       <textarea
         v-model="message"
         @keydown.enter="handleEnter"
-        :placeholder="placeholderMsg"
+        :placeholder='isMobile?"输入消息...":"输入消息...按住shift可以换行"'
       ></textarea>
       <button @click="sendMessage" class="send-btn">发送</button>
     </div>
