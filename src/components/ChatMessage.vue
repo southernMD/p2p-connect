@@ -3,7 +3,7 @@ import { inject, onMounted, ref } from 'vue'
 import FileMessage from './FileMessage.vue'
 import { Msg } from '../hooks/socket';
 const userId = inject('userId')
-const props = defineProps<{
+defineProps<{
   messages: Msg[]
 }>()
 
@@ -50,6 +50,11 @@ onMounted(() => {
 
 .messages {
   padding: 1rem;
+}
+@media (max-width: 768px) {
+  .messages {
+    height: 300px;
+  }
 }
 
 .message {
