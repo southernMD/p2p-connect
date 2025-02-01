@@ -22,6 +22,9 @@ const openLink = (flag:boolean)=>{
 const isMobile = computed(() => {
   return new MobileDetect(window.navigator.userAgent).mobile()
 });
+const ifWebkitdirectory = computed(()=>{
+  return 'showDirectoryPicker' in window
+})
 
 const handleEnter = (event: KeyboardEvent) => {
   if(isMobile.value) return;
@@ -37,7 +40,7 @@ const handleEnter = (event: KeyboardEvent) => {
   <div class="chat-input">
     <div class="toolbar" draggable="false">
       <button class="tool-btn" @click="openLink(true)">📄</button>
-      <button class="tool-btn" @click="openLink(false)" v-if="!isMobile">📁</button>
+      <button class="tool-btn" @click="openLink(false)" v-if="ifWebkitdirectory">📁</button>
     </div>
     <div class="input-area">
       <textarea
